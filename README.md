@@ -19,5 +19,5 @@ npm run dev
 Open the URL printed by Vite (usually http://localhost:5173).
 
 Notes
-- The UI uses Tailwind-like classes but Tailwind is not configured in this scaffold. You can either keep using the utility classes (they'll have no effect) or add Tailwind following the Tailwind docs.
-- If you want I can add Tailwind configuration and wire it up.
+- Tailwind CSS is configured in this scaffold (files added: `tailwind.config.cjs`, `postcss.config.cjs`, and Tailwind directives are included in `src/index.css`). After you run `npm install`, Vite will process Tailwind automatically.
+- If you want a custom theme or to add Tailwind plugins, I can update `tailwind.config.cjs` accordingly.
