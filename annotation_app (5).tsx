@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { LogOut, Plus, Download, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { LogOut, Plus, Download, CheckCircle, Clock } from 'lucide-react';
 
 const generateId = () => Math.random().toString(16).slice(2);
 
@@ -47,17 +47,17 @@ export default function AnnotationApp() {
 }
 
 function LoginPage({ onLogin, users }) {
-  const [userId, setUserId] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = () => {
-    if (!userId.trim() || !password.trim()) {
+    if (!name.trim() || !password.trim()) {
       setError('Please fill in both fields');
       return;
     }
     
-    if (!onLogin(userId, password)) {
+    if (!onLogin(name, password)) {
       setError('Invalid name or password');
     }
   };
@@ -73,12 +73,12 @@ function LoginPage({ onLogin, users }) {
             <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
             <input
               type="text"
-              value={userId}
+              value={name}
               onChange={(e) => {
-                setUserId(e.target.value);
+                setName(e.target.value);
                 setError('');
               }}
-              placeholder="Enter your name"
+              placeholder="Enter your name (admin)"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
             />
@@ -111,6 +111,8 @@ function LoginPage({ onLogin, users }) {
           >
             Login
           </button>
+
+
         </div>
       </div>
     </div>
@@ -258,10 +260,10 @@ function AdminDashboard({ data, setData, user }) {
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Admin Dashboard</h2>
         
         <div className="grid grid-cols-4 gap-4 mb-8">
-          <StatCard icon={<Plus size={24} />} label="Total Triplets" value={data.triplets.length} color="blue" />
-          <StatCard icon={<CheckCircle size={24} />} label="Annotations Done" value={totalAnnotations} color="green" />
-          <StatCard icon={<Clock size={24} />} label="Target" value={targetAnnotations} color="yellow" />
-          <StatCard icon={<Plus size={24} />} label="Total Users" value={data.users.length} color="blue" />
+          <StatCard label="Total Triplets" value={data.triplets.length} color="blue" />
+          <StatCard label="Annotations Done" value={totalAnnotations} color="green" />
+          <StatCard label="Target" value={targetAnnotations} color="yellow" />
+          <StatCard label="Total Users" value={data.users.length} color="blue" />
         </div>
 
         <div className="bg-gray-50 p-4 rounded-lg mb-6">
@@ -324,9 +326,6 @@ function AdminDashboard({ data, setData, user }) {
               <p className="text-xs bg-blue-100 text-blue-800 inline-block px-2 py-1 rounded mt-2">{u.role}</p>
             </div>
           ))}
-          {data.users.length === 0 && (
-            <p className="text-gray-500 text-center col-span-2 py-4">No users added yet</p>
-          )}
         </div>
       </div>
 
@@ -396,7 +395,7 @@ function AdminDashboard({ data, setData, user }) {
             <textarea
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
-              placeholder="Format: target | bias_type | context_sentence&#10;Ethiopia | race | Many people live in Ethiopia.&#10;Women | gender | Most women work in healthcare."
+              placeholder="Format: target | bias_type | context_sentence"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
               rows="8"
             />
@@ -436,13 +435,12 @@ function AdminDashboard({ data, setData, user }) {
 }
 
 function GenerationPage({ data, setData, user }) {
-  const [selectedTripletId, setSelectedTripletId] = useState(null);
   const [stereotype, setStereotype] = useState('');
   const [antiStereotype, setAntiStereotype] = useState('');
   const [neutral, setNeutral] = useState('');
 
   const availableTriplets = data.triplets.filter(t => !t.generatorId);
-  const triplet = availableTriplets.find(t => t.id === selectedTripletId) || availableTriplets[0];
+  const triplet = availableTriplets[0];
 
   const handleSubmit = () => {
     if (!triplet || !stereotype.trim() || !antiStereotype.trim() || !neutral.trim()) {
@@ -468,14 +466,13 @@ function GenerationPage({ data, setData, user }) {
     setStereotype('');
     setAntiStereotype('');
     setNeutral('');
-    setSelectedTripletId(null);
   };
 
   if (availableTriplets.length === 0) {
     return (
       <div className="p-8 max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-          <AlertCircle size={48} className="mx-auto text-yellow-500 mb-4" />
+          <CheckCircle size={48} className="mx-auto text-yellow-500 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">No Tasks Available</h2>
           <p className="text-gray-600">Waiting for admin to add context entries...</p>
         </div>
@@ -550,9 +547,6 @@ function GenerationPage({ data, setData, user }) {
 }
 
 function AnnotationPage({ data, setData, user }) {
-  const [selectedTripletId, setSelectedTripletId] = useState(null);
-  const [selectedSentenceId, setSelectedSentenceId] = useState(null);
-
   const tripletsNeedingAnnotation = data.triplets.filter(t => 
     t.sentences.length > 0 && t.sentences.some(s => s.labels.length < 5)
   );
@@ -655,7 +649,7 @@ function AnnotationPage({ data, setData, user }) {
   );
 }
 
-function StatCard({ icon, label, value, color }) {
+function StatCard({ label, value, color }) {
   const colorMap = {
     blue: 'bg-blue-100 text-blue-700',
     green: 'bg-green-100 text-green-700',
@@ -664,10 +658,7 @@ function StatCard({ icon, label, value, color }) {
 
   return (
     <div className={`${colorMap[color]} rounded-lg p-6`}>
-      <div className="flex items-center gap-3 mb-2">
-        {icon}
-        <p className="text-sm font-medium">{label}</p>
-      </div>
+      <p className="text-sm font-medium mb-2">{label}</p>
       <p className="text-3xl font-bold">{value}</p>
     </div>
   );
