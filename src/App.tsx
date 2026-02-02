@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { LogOut, Plus, Download, CheckCircle } from 'lucide-react'
 import AnnotationProgress from './components/AnnotationProgress'
 import PendingAnnotations from './components/PendingAnnotations'
+import AnnotationStats from './components/AnnotationStats'
 
 type Role = 'admin' | 'generator' | 'annotator'
 
@@ -117,6 +118,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header user={currentUser} onLogout={logout} />
       <AnnotationProgress demoMode={demoMode} />
+      <AnnotationStats demoMode={demoMode} />
       <PendingAnnotations demoMode={demoMode} />
       {currentUser.roles.includes('admin') && (
         <AdminDashboard data={data} setData={setData} user={currentUser} demoMode={demoMode} setDemoMode={setDemoMode} />
