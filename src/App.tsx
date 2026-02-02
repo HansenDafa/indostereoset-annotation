@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { LogOut, Plus, Download, CheckCircle } from 'lucide-react'
+import AnnotationProgress from './components/AnnotationProgress'
 
 type Role = 'admin' | 'generator' | 'annotator'
 
@@ -61,7 +62,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header user={currentUser} onLogout={logout} />
-
+      <AnnotationProgress />
       {currentUser.role === 'admin' && (
         <AdminDashboard data={data} setData={setData} user={currentUser} />
       )}
