@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { LogOut, Plus, Download, CheckCircle } from 'lucide-react'
 import AnnotationProgress from './components/AnnotationProgress'
 
@@ -8,7 +8,7 @@ interface User {
   id: string
   name: string
   password: string
-  role: Role
+  roles: Role[]
 }
 
 interface Label {
@@ -33,14 +33,65 @@ interface Triplet {
 
 const generateId = () => Math.random().toString(16).slice(2)
 
+const extractAnnotatorsAndGeneratorsFromData = async (): Promise<User[]> => {
+  try {
+    const response = await fetch('/indostereoset.json')
+    const data = await response.json()
+    const userRoles = new Map<string, Set<Role>>()
+    
+    const extractIds = (obj: any) => {
+      if (obj && typeof obj === 'object') {
+        if (obj.annotator_id) {
+          if (!userRoles.has(obj.annotator_id)) {
+            userRoles.set(obj.annotator_id, new Set())
+          }
+          userRoles.get(obj.annotator_id)!.add('annotator')
+        }
+        if (obj.made_by) {
+          if (!userRoles.has(obj.made_by)) {
+            userRoles.set(obj.made_by, new Set())
+          }
+          userRoles.get(obj.made_by)!.add('generator')
+        }
+        Object.values(obj).forEach(extractIds)
+      } else if (Array.isArray(obj)) {
+        obj.forEach(extractIds)
+      }
+    }
+    
+    extractIds(data)
+    
+    return Array.from(userRoles.entries()).map(([id, rolesSet], idx) => ({
+      id,
+      name: `user_${idx + 1}`,
+      password: id.slice(0, 8),
+      roles: Array.from(rolesSet)
+    }))
+  } catch (error) {
+    console.error('Failed to extract users:', error)
+    return []
+  }
+}
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [data, setData] = useState<{ triplets: Triplet[]; users: User[] }>({
     triplets: [],
     users: [
-      { id: 'admin_user', name: 'admin', password: 'admin123', role: 'admin' }
+      { id: 'admin_user', name: 'admin', password: 'admin123', roles: ['admin'] }
     ]
   })
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      const users = await extractAnnotatorsAndGeneratorsFromData()
+      setData(prev => ({
+        ...prev,
+        users: [prev.users[0], ...users]
+      }))
+    }
+    loadUsers()
+  }, [])
 
   const login = (name: string, password: string) => {
     const user = data.users.find(u => u.name === name && u.password === password)
@@ -63,13 +114,13 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header user={currentUser} onLogout={logout} />
       <AnnotationProgress />
-      {currentUser.role === 'admin' && (
+      {currentUser.roles.includes('admin') && (
         <AdminDashboard data={data} setData={setData} user={currentUser} />
       )}
-      {currentUser.role === 'generator' && (
+      {currentUser.roles.includes('generator') && (
         <GenerationPage data={data} setData={setData} user={currentUser} />
       )}
-      {currentUser.role === 'annotator' && (
+      {currentUser.roles.includes('annotator') && (
         <AnnotationPage data={data} setData={setData} user={currentUser} />
       )}
     </div>
@@ -154,7 +205,7 @@ function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
     <header className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Annotation System</h1>
-        <p className="text-sm text-gray-600">Logged in as <span className="font-semibold">{user.name}</span> ({user.role})</p>
+        <p className="text-sm text-gray-600">Logged in as <span className="font-semibold">{user.name}</span> ({user.roles.join(', ')})</p>
       </div>
       <button
         onClick={onLogout}
@@ -353,7 +404,13 @@ function AdminDashboard({ data, setData, user }: { data: { triplets: Triplet[]; 
             <div key={u.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
               <p className="font-semibold text-gray-800">{u.name}</p>
               <p className="text-xs text-gray-600 mt-1">ID: {u.id}</p>
-              <p className="text-xs bg-blue-100 text-blue-800 inline-block px-2 py-1 rounded mt-2">{u.role}</p>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {u.roles.map(role => (
+                  <span key={role} className="text-xs bg-blue-100 text-blue-800 inline-block px-2 py-1 rounded">
+                    {role}
+                  </span>
+                ))}
+              </div>
             </div>
           ))}
         </div>
