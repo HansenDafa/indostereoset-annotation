@@ -88,7 +88,7 @@ export default function App() {
       const users = await extractAnnotatorsAndGeneratorsFromData()
       setData(prev => ({
         ...prev,
-        users: [prev.users[0], ...users]
+        users: [...prev.users, ...users]
       }))
     }
     loadUsers()
