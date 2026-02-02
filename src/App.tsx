@@ -78,7 +78,8 @@ export default function App() {
   const [data, setData] = useState<{ triplets: Triplet[]; users: User[] }>({
     triplets: [],
     users: [
-      { id: 'admin_user', name: 'admin', password: 'admin123', roles: ['admin'] }
+      { id: 'admin_user', name: 'admin', password: 'admin123', roles: ['admin'] },
+      { id: 'abim_user', name: 'abim', password: 'abim123', roles: ['annotator', 'generator'] }
     ]
   })
 
