@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { LogOut, Plus, Download, CheckCircle } from 'lucide-react'
 import AnnotationProgress from './components/AnnotationProgress'
+import PendingAnnotations from './components/PendingAnnotations'
 
 type Role = 'admin' | 'generator' | 'annotator'
 
@@ -75,6 +76,7 @@ const extractAnnotatorsAndGeneratorsFromData = async (): Promise<User[]> => {
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [demoMode, setDemoMode] = useState(false)
   const [data, setData] = useState<{ triplets: Triplet[]; users: User[] }>({
     triplets: [],
     users: [
@@ -114,9 +116,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Header user={currentUser} onLogout={logout} />
-      <AnnotationProgress />
+      <AnnotationProgress demoMode={demoMode} />
+      <PendingAnnotations demoMode={demoMode} />
       {currentUser.roles.includes('admin') && (
-        <AdminDashboard data={data} setData={setData} user={currentUser} />
+        <AdminDashboard data={data} setData={setData} user={currentUser} demoMode={demoMode} setDemoMode={setDemoMode} />
       )}
       {currentUser.roles.includes('generator') && (
         <GenerationPage data={data} setData={setData} user={currentUser} />
@@ -218,7 +221,7 @@ function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
   )
 }
 
-function AdminDashboard({ data, setData, user }: { data: { triplets: Triplet[]; users: User[] }; setData: React.Dispatch<React.SetStateAction<{ triplets: Triplet[]; users: User[] }>>; user: User }) {
+function AdminDashboard({ data, setData, user, demoMode, setDemoMode }: { data: { triplets: Triplet[]; users: User[] }; setData: React.Dispatch<React.SetStateAction<{ triplets: Triplet[]; users: User[] }>>; user: User; demoMode: boolean; setDemoMode: React.Dispatch<React.SetStateAction<boolean>> }) {
   const [newContext, setNewContext] = useState('')
   const [target, setTarget] = useState('')
   const [biasType, setBiasType] = useState('race')
@@ -370,6 +373,16 @@ function AdminDashboard({ data, setData, user }: { data: { triplets: Triplet[]; 
             className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
           >
             <Plus size={18} /> {showUserUpload ? 'Hide' : 'Add Users'}
+          </button>
+          <button
+            onClick={() => setDemoMode(!demoMode)}
+            className={`flex items-center gap-2 px-6 py-2 rounded-lg transition font-semibold ${
+              demoMode 
+                ? 'bg-orange-600 text-white hover:bg-orange-700' 
+                : 'bg-gray-600 text-white hover:bg-gray-700'
+            }`}
+          >
+            {demoMode ? '🎬 Demo Mode: ON (75%)' : '🎬 Demo Mode: OFF'}
           </button>
         </div>
 
